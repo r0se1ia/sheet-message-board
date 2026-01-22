@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>留言板</title>
+  <style>
+    :root {
+      /* Roselia 主題色 */
+      --roselia-main: #3344aa;
+      --roselia-soft: #ddddff;
+
+      /* 成員應援色（可視需要使用） */
+      --color-yukina: #881188;
+      --color-sayo: #00aabb;
+      --color-lisa: #dd2200;
+      --color-ako: #dd0088;
+      --color-rinko: #bbbbbb;
+
+      /* 中性色 */
+      --text-main: #222222;
+      --text-muted: #718096;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.15), transparent 60%),
+        linear-gradient(135deg, var(--roselia-main) 0%, var(--color-yukina) 45%, #000000 100%);
+      min-height: 100vh;
+      color: var(--text-main);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      font-weight: 500;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(221, 221, 255, 0.96));
+      border: none;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 16px 0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: var(--roselia-main);
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h3::before {
+      content: "";
+      width: 4px;
+      height: 20px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--roselia-main), var(--color-yukina));
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+    }
+
+    label:first-of-type {
+      margin-top: 0;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid rgba(51, 68, 170, 0.2);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      background: #f7fafc;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--roselia-main);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(51, 68, 170, 0.18);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #a0aec0;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .row > div {
+      flex: 1;
+    }
+
+    @media (max-width: 640px) {
+      .row {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+
+    button {
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, var(--roselia-main) 0%, var(--color-yukina) 100%);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    #btnRefresh {
+      background: linear-gradient(135deg, var(--color-sayo) 0%, #66dde5 100%);
+      box-shadow: 0 4px 12px rgba(0, 170, 187, 0.45);
+    }
+
+    #btnRefresh:hover:not(:disabled) {
+      box-shadow: 0 6px 16px rgba(72, 187, 120, 0.5);
+    }
+
+    .button-group {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    #hint {
+      color: #e53e3e;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .msg {
+      white-space: pre-wrap;
+      color: #1a202c;
+      line-height: 1.7;
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      border-left: 3px solid var(--roselia-main);
+    }
+
+    .meta {
+      display: flex;
+      gap: 12px;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .meta b {
+      font-size: 16px;
+      color: #2d3748;
+      font-weight: 600;
+    }
+
+    .meta small {
+      color: #718096;
+      font-size: 13px;
+    }
+
+    .message-item {
+      margin: 16px 0;
+      padding: 16px;
+      padding-top: 50px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .message-item:hover {
+      border-color: #cbd5e0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .message-item:first-child {
+      margin-top: 0;
+    }
+
+    .day-separator {
+      margin-top: 20px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .day-separator::before,
+    .day-separator::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    }
+
+    .day-separator-label {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: rgba(51, 68, 170, 0.08);
+      border: 1px solid rgba(51, 68, 170, 0.25);
+      color: #3344aa;
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #a0aec0;
+    }
+
+    .empty-state::before {
+      content: "💬";
+      display: block;
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .copy-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #f7fafc;
+      color: #4a5568;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      background: #edf2f7;
+      color: #2d3748;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+
+    .copy-btn.copied {
+      background: #48bb78;
+      color: #fff;
+    }
+
+    .message-actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .delete-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #fed7d7;
+      color: #c53030;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover {
+      background: #fc8181;
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .delete-btn:active {
+      transform: translateY(0);
+    }
+
+    .delete-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>💬 留言板</h1>
+    <div class="status" id="status">尚未讀取</div>
+  </div>
+
+  <div class="main-layout">
+    <div class="card">
+      <div class="muted" style="margin-bottom: 20px;">
+        📝 送出留言會寫入 Google Sheet。頁面每 10 秒自動刷新最新留言。
+      </div>
+
+      <div class="row">
+        <div>
+          <label>暱稱（可選）</label>
+          <input id="name" maxlength="50" placeholder="例如：小華" />
+        </div>
+        <div>
+          <label>來源/備註（可選）</label>
+          <input id="source" maxlength="100" placeholder="例如：PC-01 / 倉庫 / 夜班" />
+        </div>
+      </div>
+
+      <label>留言內容（必填）</label>
+      <textarea id="message" maxlength="1000" placeholder="輸入留言..."></textarea>
+
+      <div class="button-group">
+        <button id="btnSend">✉️ 送出留言</button>
+        <button id="btnRefresh">🔄 手動刷新</button>
+        <span id="hint"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📋 最新留言</h3>
+      <div id="list" class="muted">
+        <div class="empty-state">尚無留言</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 載入配置檔案 -->
+<script src="config.js"></script>
+
+<script>
+  // 從配置檔案讀取設定
+  const API_URL = CONFIG.API_URL;
+  const REFRESH_MS = CONFIG.REFRESH_INTERVAL_MS;
+
+  const elStatus = document.getElementById("status");
+  const elHint = document.getElementById("hint");
+  const elList = document.getElementById("list");
+  const elName = document.getElementById("name");
+  const elSource = document.getElementById("source");
+  const elMessage = document.getElementById("message");
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function formatTime(v) {
+    if (!v) return "";
+    
+    // 嘗試解析為 Date 物件
+    let date;
+    if (v instanceof Date) {
+      date = v;
+    } else if (typeof v === 'string') {
+      // 嘗試解析字串
+      date = new Date(v);
+      // 如果無法解析，返回原始字串
+      if (isNaN(date.getTime())) {
+        return String(v);
+      }
+    } else {
+      return String(v);
+    }
+    
+    // 格式化為 YYYY/MM/DD H:MM:SS
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  /**
+   * 取得日期 key（僅日期部分），用於分組顯示
+   * @param {*} v - 可能是日期字串或 Date 物件
+   * @returns {string} 例如：2026/01/19，無法解析時回傳空字串
+   */
+  function getDateKey(v) {
+    if (!v) return "";
+
+    let date;
+    if (v instanceof Date) {
+      date = v;
+    } else if (typeof v === "string") {
+      date = new Date(v);
+      if (isNaN(date.getTime())) return "";
+    } else {
+      return "";
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}/${month}/${day}`;
+  }
+
+  /**
+   * 載入留言列表
+   */
+  async function loadMessages() {
+    try {
+      elStatus.textContent = "讀取中...";
+      const url = API_URL + "?action=list&_=" + Date.now();
+      const res = await fetch(url, { cache: "no-store" });
+      const data = await res.json();
+
+      if (!data.ok) throw new Error(data.error || "API error");
+
+      const items = data.items || [];
+      if (items.length === 0) {
+        elList.innerHTML = `<div class="empty-state">尚無留言</div>`;
+      } else {
+        let html = "";
+        let lastDate = "";
+
+        for (const item of items) {
+          const dateKey = getDateKey(item["Timestamp"]);
+          if (dateKey && dateKey !== lastDate) {
+            // 新的一天，加上日期分隔
+            html += `
+              <div class="day-separator">
+                <span class="day-separator-label">${dateKey}</span>
+              </div>
+            `;
+            lastDate = dateKey;
+          }
+
+          html += renderMessageItem(item);
+        }
+
+        elList.innerHTML = html;
+      }
+
+      elStatus.textContent = "已更新 " + new Date().toLocaleTimeString();
+    } catch (err) {
+      elStatus.textContent = "讀取失敗";
+      elHint.textContent = "讀取失敗：" + err.message;
+      console.error(err);
+    }
+  }
+
+  /**
+   * 渲染單一留言項目
+   * @param {Object} item - 留言資料物件
+   * @returns {string} HTML 字串
+   */
+  function renderMessageItem(item) {
+    const name = escapeHtml(item["Name"] || "匿名");
+    const time = escapeHtml(formatTime(item["Timestamp"]));
+    const msg  = escapeHtml(item["Message"] || "");
+    // 嘗試多種可能的 Id 欄位名稱（大小寫不同）
+    const msgId = escapeHtml(item["Id"] || item["id"] || item["ID"] || "");
+    const src  = escapeHtml(item["Source"] || "");
+    
+    // 確保 msgRaw 是字串類型並轉義為 HTML 屬性安全格式
+    const msgRaw = String(item["Message"] || "");
+    const msgRawEscaped = msgRaw
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // 總是顯示刪除按鈕，如果沒有 Id 則禁用
+    const deleteButtonDisabled = !msgId ? 'disabled' : '';
+    const deleteButtonTitle = !msgId ? '此留言沒有 ID，無法刪除' : '';
+
+    return `
+      <div class="message-item" data-msg-id="${msgId}">
+        <div class="message-actions">
+          <button class="copy-btn" data-copy-text="${msgRawEscaped}">📋 複製</button>
+          <button class="delete-btn" data-delete-id="${msgId}" ${deleteButtonDisabled} title="${deleteButtonTitle}">🗑️ 刪除</button>
+        </div>
+        <div class="meta">
+          <b>${name}</b>
+          <small>${time}</small>
+          ${src ? `<small>｜${src}</small>` : ``}
+        </div>
+        <div class="msg">${msg}</div>
+      </div>
+    `;
+  }
+
+  /**
+   * 送出留言
+   */
+  async function sendMessage() {
+    elHint.textContent = "";
+
+    const payload = {
+      name: (elName.value || "").trim(),
+      source: (elSource.value || "").trim(),
+      message: (elMessage.value || "").trim()
+    };
+
+    if (!payload.message) {
+      elHint.textContent = "留言內容必填";
+      return;
+    }
+
+    const btnSend = document.getElementById("btnSend");
+    try {
+      btnSend.disabled = true;
+      elStatus.textContent = "送出中...";
+
+      // 使用 text/plain 傳 JSON，避免瀏覽器觸發 CORS preflight
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "API error");
+
+      // 清空表單
+      elMessage.value = "";
+      elName.value = "";
+      elSource.value = "";
+      
+      elStatus.textContent = "送出成功";
+      await loadMessages();
+    } catch (err) {
+      elStatus.textContent = "送出失敗";
+      elHint.textContent = "送出失敗：" + err.message;
+      console.error(err);
+    } finally {
+      btnSend.disabled = false;
+    }
+  }
+
+  /**
+   * 解碼 HTML 實體
+   * @param {string} text - 包含 HTML 實體的文字
+   * @returns {string} 解碼後的文字
+   */
+  function decodeHtmlEntities(text) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+  }
+
+  /**
+   * 使用傳統方法複製文字到剪貼板（降級方案）
+   * @param {string} text - 要複製的文字
+   * @returns {boolean} 是否成功
+   */
+  function copyMessageFallback(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      return true;
+    } catch (err) {
+      console.error('複製失敗:', err);
+      return false;
+    } finally {
+      document.body.removeChild(textarea);
+    }
+  }
+
+  /**
+   * 複製文字到剪貼板並顯示反饋
+   * @param {HTMLElement} button - 按鈕元素
+   * @param {string} text - 要複製的文字
+   */
+  function copyToClipboard(button, text) {
+    const originalText = button.textContent;
+    
+    // 使用現代 Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopyFeedback(button, originalText);
+      }).catch(err => {
+        console.error('複製失敗:', err);
+        // 降級到傳統方法
+        if (copyMessageFallback(text)) {
+          showCopyFeedback(button, originalText);
+        }
+      });
+    } else {
+      // 降級到傳統方法
+      if (copyMessageFallback(text)) {
+        showCopyFeedback(button, originalText);
+      }
+    }
+  }
+
+  /**
+   * 顯示複製成功的視覺反饋
+   * @param {HTMLElement} button - 按鈕元素
+   * @param {string} originalText - 原始按鈕文字
+   */
+  function showCopyFeedback(button, originalText) {
+    button.textContent = '✓ 已複製';
+    button.classList.add('copied');
+    setTimeout(() => {
+      button.textContent = originalText;
+      button.classList.remove('copied');
+    }, 2000);
+  }
+
+  /**
+   * 刪除留言
+   * @param {string} id - 留言的唯一識別碼
+   */
+  async function deleteMessage(id) {
+    if (!id) {
+      elHint.textContent = "無法刪除：缺少留言 ID";
+      return;
+    }
+
+    // 確認刪除
+    if (!confirm("確定要刪除這則留言嗎？")) {
+      return;
+    }
+
+    try {
+      const payload = {
+        action: "delete",
+        id: id
+      };
+
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "API error");
+
+      elStatus.textContent = "刪除成功";
+      // 重新載入留言列表
+      await loadMessages();
+    } catch (err) {
+      elStatus.textContent = "刪除失敗";
+      elHint.textContent = "刪除失敗：" + err.message;
+      console.error(err);
+    }
+  }
+
+  // 使用事件委派處理複製和刪除按鈕點擊
+  elList.addEventListener('click', function(e) {
+    // 處理複製按鈕
+    if (e.target.classList.contains('copy-btn')) {
+      const encodedText = e.target.getAttribute('data-copy-text');
+      if (encodedText) {
+        const decodedText = decodeHtmlEntities(encodedText);
+        copyToClipboard(e.target, decodedText);
+      }
+    }
+    
+    // 處理刪除按鈕
+    if (e.target.classList.contains('delete-btn')) {
+      const id = e.target.getAttribute('data-delete-id');
+      if (id) {
+        e.target.disabled = true;
+        deleteMessage(id).finally(() => {
+          e.target.disabled = false;
+        });
+      }
+    }
+  });
+
+  document.getElementById("btnSend").addEventListener("click", sendMessage);
+  document.getElementById("btnRefresh").addEventListener("click", loadMessages);
+
+  loadMessages();
+  setInterval(loadMessages, REFRESH_MS);
+</script>
+</body>
+</html>
